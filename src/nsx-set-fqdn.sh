@@ -28,6 +28,7 @@ do
     read nsx_user
 done
 while [[ -z $nsx_pass ]]
+do
     echo -n "Enter the NSX-T Password: "
     read -s nsx_pass
 done
@@ -37,3 +38,8 @@ done
 #
 nsx_auth=$(echo -n ${nsx_user}:${nsx_pass} | base64)
 
+echo "$nsx_user"
+echo "$nsx_pass"
+echo "$nsx_fqdn"
+echo "$nsx_path"
+echo "$nsx_auth"
