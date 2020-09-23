@@ -19,6 +19,7 @@ if [[ -z $nsx_fqdn ]]; then
     read nsx_fqdn
 else
     echo "NSX-T Manager FQDN loaded from environment"
+fi
 #
 # Collect credentials
 #
@@ -29,8 +30,10 @@ do
 done
 while [[ -z $nsx_pass ]]
 do
-    echo -n "Enter the NSX-T Password: "
-    read -s nsx_pass
+    read -s -p "Enter the NSX-T Password: " nsx_pass
+    #echo -n "Enter the NSX-T Password: "
+    #read -s nsx_pass
+    echo 
 done
 
 #
@@ -38,6 +41,7 @@ done
 #
 nsx_auth=$(echo -n ${nsx_user}:${nsx_pass} | base64)
 
+echo 
 echo "$nsx_user"
 echo "$nsx_pass"
 echo "$nsx_fqdn"
