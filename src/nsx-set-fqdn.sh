@@ -26,13 +26,11 @@ fi
 while [[ -z $nsx_user ]]
 do
     echo -n "Enter the NSX-T Username: "
-    read nsx_user
+    read -r nsx_user
 done
 while [[ -z $nsx_pass ]]
 do
-    read -s -p "Enter the NSX-T Password: " nsx_pass
-    #echo -n "Enter the NSX-T Password: "
-    #read -s nsx_pass
+    read -r -s -p "Enter the NSX-T Password: " nsx_pass
     echo 
 done
 
@@ -40,10 +38,3 @@ done
 # Convert credentials to Base64
 #
 nsx_auth=$(echo -n ${nsx_user}:${nsx_pass} | base64)
-
-echo 
-echo "$nsx_user"
-echo "$nsx_pass"
-echo "$nsx_fqdn"
-echo "$nsx_path"
-echo "$nsx_auth"
