@@ -25,9 +25,9 @@ fi
 #
 while [[ -z $nsx_user ]]
 do
-    echo -n "Enter the NSX-T Username: "
-    read -r nsx_user
+    read -r -p "Enter the NSX-T Username: " nsx_user
 done
+
 while [[ -z $nsx_pass ]]
 do
     read -r -s -p "Enter the NSX-T Password: " nsx_pass
