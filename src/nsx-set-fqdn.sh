@@ -2,12 +2,15 @@
 
 # Purpose: Enables FQDN usage on NSX Manager
 # Author: Maros Kukan
+#
+# The following environment variables can be loaded automatically
+# declare -x nsx_fqdn=nsxmgr.example.com
+# declare -x nsx_user=admin
+# declare -x nsx_pass=VMware1!
 
 declare -l nsx_path
 
 function get_fqdn() {
-    # Verify if NSX FQDN variable is available globally
-    # (e.g declare -xl nsx_fqdn=nsxmgr.example.com)
     if [[ -z $nsx_fqdn ]]; then
         while [[ -z $nsx_fqdn ]]
         do
@@ -42,31 +45,38 @@ function get_creds () {
 }
 
 
-function check_api() {
+function set_fqdn() {
     # Verify if API Service and Credentials are valid
     local fqdn=$1
     local auth=$2
-    local response=$(curl "https://${fqdn}/api/v1/cluster/api-service" \
+    local response=$(curl "https://${fqdn}/api/v1/configs/management" \
     --insecure \
     --silent \
-    --head \
+    --request GET \
     --header "Authorization: Basic $auth")
-    echo $response
-    local status_code=$(echo $response | sed -n 's/HTTP.* \(.*\) .*/\1/p')
-    if [[ ! $status_code == 200 ]]; then
-         echo "API Service is not available. Status code is $status_code"
-         exit 1
+
+    local publish_fqdns=$(echo $response | jq '.publish_fqdns')
+    local revision=$(echo $response | jq '._revision')
+
+    if [[ $publish_fqdns == 'true' ]]; then
+        echo "Publish FQDN is enabled."
+        exit 0
+    elif [[ $publish_fqdns == 'false' ]]; then
+        echo "Publis FQDN is not enabled."
+        exit 0
     else
-         echo "API Service is available"
+        echo "Publish FQDN status is uknown."
+        echo $publish_fqdns
+        exit 1
     fi
 }
 
 
-
-
+# Collect FQDN and Credentials
 get_fqdn
 get_creds
-echo $nsx_fqdn
-echo $nsx_auth
 
-check_api $nsx_fqdn $nsx_auth
+echo "*********************************************"
+# Validate "Publish FQDNs" status
+
+set_fqdn "$nsx_fqdn" "$nsx_auth"
