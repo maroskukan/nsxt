@@ -8,7 +8,6 @@
 # declare -x nsx_user=admin
 # declare -x nsx_pass=VMware1!
 
-declare -l nsx_path
 
 function get_fqdn() {
     if [[ -z $nsx_fqdn ]]; then
@@ -41,42 +40,56 @@ function get_creds () {
     else
         echo "NSX-T Password loaded from environment."
     fi
-    nsx_auth=$(echo -n ${nsx_user}:${nsx_pass} | base64)
+    nsx_auth=$(echo -n "${nsx_user}":"${nsx_pass}" | base64)
 }
 
 
-function set_fqdn() {
+function enable_fqdn() {
     # Verify if API Service and Credentials are valid
     local fqdn=$1
     local auth=$2
-    local response=$(curl "https://${fqdn}/api/v1/configs/management" \
+    local response
+    response=$(curl "https://${fqdn}/api/v1/configs/management" \
     --insecure \
     --silent \
     --request GET \
     --header "Authorization: Basic $auth")
 
-    local publish_fqdns=$(echo $response | jq '.publish_fqdns')
-    local revision=$(echo $response | jq '._revision')
+    local publish_fqdns
+    publish_fqdns=$(echo "$response" | jq '.publish_fqdns')
+    local revision
+    revision=$(echo "$response" | jq '._revision')
 
     if [[ $publish_fqdns == 'true' ]]; then
-        echo "Publish FQDN is enabled."
+        echo "Publish FQDN is enabled, current revision $revision."
         exit 0
     elif [[ $publish_fqdns == 'false' ]]; then
-        echo "Publis FQDN is not enabled."
-        exit 0
+        echo "Publish FQDN is not enabled. Enabling it now."
+        local response
+        response=$(curl "https://${fqdn}/api/v1/configs/management" \
+        --insecure \
+        --silent \
+        --request PUT \
+        --header "Content-Type: application/json" \
+        --header "Authorization: Basic $auth" \
+        --data-raw "{\"publish_fqdns\": true, \"_revision\": $revision}")
+        local new_revision
+        new_revision=$(echo "$response" | jq '._revision')
+        echo "The FQDN has been enabled, current revision $new_revision."
     else
         echo "Publish FQDN status is uknown."
-        echo $publish_fqdns
+        echo "$publish_fqdns"
         exit 1
     fi
 }
 
 
+echo
 # Collect FQDN and Credentials
 get_fqdn
 get_creds
 
-echo "*********************************************"
+echo
 # Validate "Publish FQDNs" status
+enable_fqdn "$nsx_fqdn" "$nsx_auth"
 
-set_fqdn "$nsx_fqdn" "$nsx_auth"
